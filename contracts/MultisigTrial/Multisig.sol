@@ -16,7 +16,7 @@ contract Multisig is IMultisigCore{
         bool isExecuted;
     }
 
-    address [] public owners;
+    address [] public admins;
     mapping (address => bool) public isAdmin;
     mapping(uint256 => mapping(address => bool)) public isApprover;
     Transaction [] transactions;
@@ -40,6 +40,38 @@ contract Multisig is IMultisigCore{
             revert NotApprovedYet(txnid, msg.sender);
         }
         _;
+    }
+
+    constructor(address[] memory _admins, uint8 _minApprovals){
+        admins = _admins;
+
+        if(_minApprovals > admins.length){
+           revert InvalidMinApproval();
+        }
+         minApprovals = _minApprovals;
+
+        for(uint8 i ; i < _admins.length; i++){
+            isAdmin[admins[i]] = true;
+        }
+    }
+
+    function submit(address _to, uint256 _value, bytes calldata _data) internal returns (uint256 txId){
+        if(_value > availableBalances){
+            revert InvalidTxnValue();
+        }
+
+        Transaction memory txn = Transaction({
+            to: _to,
+            value: _value,
+            data: _data,
+            isExecuted: false
+        });
+        transactions.push(txn);
+        availableBalances -= _value;
+        txId = transactions.length - 1;
+
+        emit Submit(txId, msg.sender);
+        return txId;
     }
 
 }
