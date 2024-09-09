@@ -74,4 +74,14 @@ contract Multisig is IMultisigCore{
         return txId;
     }
 
+    function ApproveTxn(uint256 _txId) internal notExecute(_txId) notApproved(_txId){
+        isApprover[_txId][msg.sender] = true;
+        emit Approve(_txId, msg.sender);
+    }
+
+    function revoke(uint256 _txId) internal notExecute(_txId) notApproved(_txId){
+        isApprover[_txId][msg.sender] = false;
+        emit Revoke(_txId, msg.sender);
+    }
+
 }
