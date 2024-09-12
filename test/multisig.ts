@@ -122,5 +122,9 @@ describe("Multisig", function () {
     // });
   });
 
+  describe("Approve Transaction", function(){
+    
+  });
+
  
 });
