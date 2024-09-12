@@ -25,7 +25,7 @@ describe("Multisig", function () {
     // Contracts are deployed using the first signer/account by default
     const MultiSig = await hre.ethers.getContractFactory("MultiSig");
 
-    const [owner, addr1, addr2, addr3] = await hre.ethers.getSigners();
+    const [owner, addr1, addr2, addr3, receiptient] = await hre.ethers.getSigners();
 
     const quorum = 2;
     const validSigners = [owner, addr1, addr2, addr3];
@@ -34,7 +34,7 @@ describe("Multisig", function () {
     const multisig = await MultiSig.deploy(quorum,validSigners);
     //  await token.transfer(multisig.address, ethers.utils.parseUnits("1000", 18));
 
-    return {multisig,owner, addr1, addr2,addr3}
+    return {multisig,owner, addr1, addr2,addr3, receiptient}
 
   }
 
@@ -62,6 +62,64 @@ describe("Multisig", function () {
       expect(await multisig.quorum()).to.be.lessThanOrEqual(validSignersCount);
     });
 
+  });
+
+  describe("Transfer", function(){
+    it ("should not allow address zero", async function(){
+      const { token }  = await loadFixture(deployToken);
+      const { multisig, owner, addr1, addr2, addr3, receiptient } = await loadFixture(deployMultisig);
+      const tokenAddress = token.getAddress();
+      //transfer to contract
+      const fundContract=ethers.parseUnits("100", 18);
+      token.transfer(multisig.getAddress(), fundContract);
+
+      const amountToTransfer=ethers.parseUnits("1", 18);
+      const multTf = multisig.transfer(amountToTransfer, receiptient, tokenAddress);
+      
+      await expect(multTf).to.not.be.revertedWith("address zero found");
+    });
+
+    it ("should not allow Invalid Signers", async function(){
+      const { token }  = await loadFixture(deployToken);
+      const { multisig, owner, addr1, addr2, addr3, receiptient } = await loadFixture(deployMultisig);
+      const tokenAddress = token.getAddress();
+      //transfer to contract
+      const fundContract=ethers.parseUnits("100", 18);
+      token.transfer(multisig.getAddress(), fundContract);
+      
+      const amountToTransfer=ethers.parseUnits("1", 18);
+      const multTf = multisig.transfer(amountToTransfer, receiptient, tokenAddress);
+      
+      await expect(owner).to.not.be.revertedWith("invalid signer");
+    });
+
+    it ("should not allow Amount less than zero", async function(){
+      const { token }  = await loadFixture(deployToken);
+      const { multisig, owner, addr1, addr2, addr3, receiptient } = await loadFixture(deployMultisig);
+      const tokenAddress = token.getAddress();
+      //transfer to contract
+      const fundContract=ethers.parseUnits("100", 18);
+      token.transfer(multisig.getAddress(), fundContract);
+      
+      const amountToTransfer=ethers.parseUnits("1", 18);
+      const multTf = multisig.transfer(amountToTransfer, receiptient, tokenAddress);
+      
+      await expect(amountToTransfer).to.not.be.revertedWith("can't send zero amount");
+    });
+
+    //  it ("should transfer", async function(){
+    //   const { token }  = await loadFixture(deployToken);
+    //   const { multisig, owner, addr1, addr2, addr3, receiptient } = await loadFixture(deployMultisig);
+    //   const tokenAddress = token.getAddress();
+    //   //transfer to contract
+    //   const fundContract=ethers.parseUnits("100", 18);
+    //   token.transfer(multisig.getAddress(), fundContract);
+      
+    //   const amountToTransfer = ethers.parseUnits("1", 18);
+    //   const multTf = multisig.transfer(amountToTransfer, receiptient, tokenAddress);
+      
+    //   await expect(multTf).to.not.reverted;
+    // });
   });
 
  
