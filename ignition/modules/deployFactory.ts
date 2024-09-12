@@ -1,7 +1,11 @@
-const hre = require("hardhat");
 
-async function main(){
-    const Factory = await hre.ethers.getContractFactory("MultiSigFactory");
-    const factory = await Factory.deploy();
-    await factory.deployed();
-}
+import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
+
+const MultiSigFactory = buildModule("MultiSigFactoryModule", (m) => {
+
+    const factory = m.contract("MultiSigFactory");
+
+    return { factory };
+});
+
+export default MultiSigFactory;
